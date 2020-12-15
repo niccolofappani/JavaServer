@@ -42,7 +42,7 @@ public class JavaServer implements Runnable{
         ObjectMapper objMapper = new ObjectMapper();
         XmlMapper xmlMapper = new XmlMapper();
         
-        JavaMySQL myJavaMySQL = new JavaMySQL();
+        JavaMySQL database = new JavaMySQL();
         
 	public JavaServer(Socket c) {
 		connect = c;
@@ -87,7 +87,7 @@ public class JavaServer implements Runnable{
 			// we get file requested
 			fileRequested = parse.nextToken().toLowerCase();
                         if(fileRequested.equals("/punti-vendita.xml/")){
-                            fileRequested = "punti-vendita.xml";
+                            fileRequested = "/punti-vendita.xml";
                         }
 			System.out.println("File richiesto: " + fileRequested);
 			// we support only GET and HEAD methods, we check
@@ -117,7 +117,7 @@ public class JavaServer implements Runnable{
 				if (fileRequested.endsWith("/")) {
 					fileRequested += DEFAULT_FILE;
 				}
-                                else if (fileRequested.equals("punti-vendita.xml")){                                                            //come ficcarlo dentro all'arraylist
+                                else if (fileRequested.equals("/punti-vendita.xml")){                                                            //come ficcarlo dentro all'arraylist
                                     ArrayList<PuntoVendita> puntiVendita = objMapper.readValue(new File(WEB_ROOT + "/" + "puntiVendita.json"), new TypeReference<ArrayList<PuntoVendita>>(){});
                                     String fileXml = xmlMapper.writeValueAsString(puntiVendita);
                                     byte[] fileData = fileXml.getBytes();
@@ -131,6 +131,37 @@ public class JavaServer implements Runnable{
 
                                         dataOut.write(fileData, 0, fileXml.length());
                                         dataOut.flush();
+                                        return;
+                                }
+                                else if(fileRequested.equals("/studenti.xml")){
+                                    String fileXml = xmlMapper.writeValueAsString(database.getStudenti());
+                                    byte[] fileData = fileXml.getBytes();
+                                    out.println("HTTP/1.1 200 OK");
+                                        out.println("Server: Java HTTP Server: 1.0");
+                                        out.println("Date: " + new Date());
+                                        out.println("Content-type: " + getContentType(fileRequested));
+                                        out.println("Content-length: " + fileXml.length());
+                                        out.println(); // blank line between headers and content, very important !
+                                        out.flush(); // flush character output stream buffer
+
+                                        dataOut.write(fileData, 0, fileXml.length());
+                                        dataOut.flush();
+                                        return;
+                                }
+                                else if(fileRequested.equals("/studenti.json")){
+                                    String fileJson = objMapper.writeValueAsString(database.getStudenti());
+                                    byte[] fileData = fileJson.getBytes();
+                                    out.println("HTTP/1.1 200 OK");
+                                        out.println("Server: Java HTTP Server: 1.0");
+                                        out.println("Date: " + new Date());
+                                        out.println("Content-type: " + getContentType(fileRequested));
+                                        out.println("Content-length: " + fileJson.length());
+                                        out.println(); // blank line between headers and content, very important !
+                                        out.flush(); // flush character output stream buffer
+
+                                        dataOut.write(fileData, 0, fileJson.length());
+                                        dataOut.flush();
+                                        return;
                                 }
 				File file = new File(WEB_ROOT, fileRequested);
 				int fileLength = (int) file.length();
@@ -195,10 +226,12 @@ public class JavaServer implements Runnable{
 	
 	// return supported MIME Types
 	private String getContentType(String fileRequested) {
-		if (fileRequested.endsWith(".htm")  ||  fileRequested.endsWith(".html"))
-			return "text/html";
-		else
-			return "text/plain";
+		if (fileRequested.endsWith(".htm")  ||  fileRequested.endsWith(".html")){
+                    return "text/html";
+                }
+                else {
+                    return "text/plain";
+                }
 	}
 	
 	private void fileNotFound(PrintWriter out, OutputStream dataOut, String fileRequested) throws IOException {

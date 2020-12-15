@@ -5,7 +5,7 @@ import java.util.ArrayList;
 
 public class JavaMySQL {
     ArrayList<Studenti> studenti = new ArrayList<>();
-    public void start(String[] args){
+    public void start(){
         try{
             Class.forName("com.mysql.cj.jdbc.Driver");
             Connection connessione = DriverManager.getConnection("jdbc:mysql://localhost:3306/EsTPSIT?user=root&password=12345&serverTimezone=Europe/Rome");
@@ -23,5 +23,9 @@ public class JavaMySQL {
     
     public ArrayList<Studenti> getStudenti() {
         return studenti;
+    }
+    
+    public JavaMySQL(){
+        start();
     }
 }
